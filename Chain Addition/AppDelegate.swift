@@ -9,7 +9,7 @@
 import UIKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate, AdColonyDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
@@ -17,9 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AdColonyDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
-        AdColony.configureWithAppID("appafd99e970317434db1", zoneIDs: ["vz14d49337fdb14d4990"], delegate: self, logging: true)
-        
-        var defaults = UserDefaults.standard
+        let defaults = UserDefaults.standard
 
         if (defaults.integer(forKey: "firstTime") == 0)
         {
@@ -33,96 +31,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AdColonyDelegate {
             defaults.synchronize()
         }
         
-        Parse.setApplicationId("JvwMdflRa9Owbjr85kRMcnZKAP5YM8WsvmBRC6UE", clientKey: "IoF2uOL3Pd9Zs3axHxNUqxdN2IGoNA53QYiWsV9a")
-        
-        PFAnalytics.trackAppOpenedWithLaunchOptionsInBackground(launchOptions, block: nil)
-        
-        PFPurchase.addObserverForProduct("removeAds1", block: { (transaction:SKPaymentTransaction!) -> Void in
-            
-            defaults.setBool(false, forKey: "showAds")
-            
-            defaults.synchronize()
-            
-        })
-        
-        PFPurchase.addObserverForProduct("continues5", block: { (transaction:SKPaymentTransaction!) -> Void in
-            
-            var continues: Int? = defaults.integerForKey("continues")
-            
-            if let number = continues
-            {
-                continues = number
-                continues! += 5
-                defaults.setInteger(continues!, forKey: "continues")
-                
-            }
-            else
-            {
-                defaults.setInteger(5, forKey: "continues")
-                
-            }
-            
-            defaults.synchronize()
-            
-        })
-
-        PFPurchase.addObserverForProduct("continues20", block: { (transaction:SKPaymentTransaction!) -> Void in
-            
-            var continues: Int? = defaults.integerForKey("continues")
-            
-            if let number = continues
-            {
-                continues = number
-                continues! += 20
-                defaults.setInteger(continues!, forKey: "continues")
-                
-            }
-            else
-            {
-                defaults.setInteger(20, forKey: "continues")
-                
-            }
-            
-            defaults.synchronize()
-            
-        })
-        
-        PFPurchase.addObserverForProduct("continues50", block: { (transaction:SKPaymentTransaction!) -> Void in
-            
-            var continues: Int? = defaults.integerForKey("continues")
-            
-            if let number = continues
-            {
-                continues = number
-                continues! += 50
-                defaults.setInteger(continues!, forKey: "continues")
-                
-            }
-            else
-            {
-                defaults.setInteger(50, forKey: "continues")
-                
-            }
-            
-            defaults.synchronize()
-            
-        })
-        
-        
         return true
     }
     
     func onAdColonyV4VCReward(_ success: Bool, currencyName: String!, currencyAmount amount: Int32, inZone zoneID: String!) {
         
-        if (success)
+        if success
         {
             UserDefaults.standard.set(true, forKey: "addLevels")
-            
             UserDefaults.standard.synchronize()
         }
         else
         {
-            println("error")
+            print("error")
         }
         
     }

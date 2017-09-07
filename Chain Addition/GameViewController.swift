@@ -9,7 +9,7 @@
 import UIKit
 import GameKit
 
-class GameViewController: UIViewController, UIAlertViewDelegate, AdColonyAdDelegate {
+class GameViewController: UIViewController, UIAlertViewDelegate {
     
     var speed: TimeInterval = 5
     var level: Int = 1
@@ -215,18 +215,6 @@ class GameViewController: UIViewController, UIAlertViewDelegate, AdColonyAdDeleg
         }
     }
     
-    func isAdAvailable()
-    {
-        if (AdColony.isVirtualCurrencyRewardAvailableForZone("vz14d49337fdb14d4990"))
-        {
-            freeButton.isHidden = false
-        }
-        else
-        {
-            freeButton.isHidden = true
-        }
-    }
-    
     func showStartButton()
     {
         isButtonShowing = true
@@ -257,19 +245,6 @@ class GameViewController: UIViewController, UIAlertViewDelegate, AdColonyAdDeleg
         
         self.view.addSubview(startButton)
         
-        freeButton = UIButton(frame: CGRect(x: startButton.frame.origin.x - 25, y: startButton.frame.origin.y - 50, width: 150, height: 50))
-        
-        freeButton.setTitle("5 Free Levels", for: UIControlState())
-        freeButton.addTarget(self, action: #selector(GameViewController.freePoints), for: UIControlEvents.touchUpInside)
-        freeButton.titleLabel?.font = UIFont(name: "Verdana-Bold", size: 20)
-        
-        self.view.addSubview(freeButton)
-        
-        isAdAvailable()
-        
-        adTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(GameViewController.isAdAvailable), userInfo: nil, repeats: true)
-        
-        
         levelLabel = UILabel(frame: CGRect(x: startButton.frame.origin.x, y: startButton.frame.origin.y + startButton.frame.size.height, width: startButton.frame.size.width, height: startButton.frame.size.height))
         
         levelLabel.text = "Level: " + String(level)
@@ -278,7 +253,6 @@ class GameViewController: UIViewController, UIAlertViewDelegate, AdColonyAdDeleg
         levelLabel.font = UIFont(name: "Verdana-Bold", size: 17)
         
         self.view.addSubview(levelLabel)
-        
     }
     
     func updateLevelLabel()
@@ -305,12 +279,11 @@ class GameViewController: UIViewController, UIAlertViewDelegate, AdColonyAdDeleg
 
     @IBAction func keypadEntry(_ sender: UIButton)
     {
-        if count(answerText) < 10
+        if answerText.characters.count < 10
         {
             answerText =  answerText + String(sender.title(for: UIControlState())!)
             updateAnswerLabel()
         }
-       
     }
     
     @IBAction func clearEntry(_ sender: AnyObject)
@@ -368,102 +341,34 @@ class GameViewController: UIViewController, UIAlertViewDelegate, AdColonyAdDeleg
             {
                 life3.isHidden = true
                 
-                let alert = UIAlertView(title: "Continue?", message: "Would you like to use a continue to keep playing? You have \(continues) continues remaining.", delegate: self, cancelButtonTitle: nil, otherButtonTitles: "No", "Yes")
-                
-                alert.tag = 1
-                
-                alert.show()
-            }
-           
-        }
-        
-        isGameRunning = false
-    }
-    
-    func alertView(_ alertView: UIAlertView, clickedButtonAt buttonIndex: Int) {
-        
-        if alertView.tag == 1
-        {
-            if buttonIndex == 0
-            {
                 submitScore()
                 
-                var defaults = UserDefaults.standard
+                let defaults = UserDefaults.standard
                 
                 defaults.set(1, forKey: "level")
                 defaults.set(3, forKey: "lives")
                 
                 self.navigationController?.popToRootViewController(animated: true)
-            
-                AdColony.playVideoAdForZone("vz99a4e1c37edc48c492", withDelegate: self)
-
-                
-            }
-            else if buttonIndex == 1
-            {
-                if continues == 0
-                {
-                    let alert2 = UIAlertView(title: "No Continues Remaining", message: "You are out of continues.", delegate: self, cancelButtonTitle: nil, otherButtonTitles: "Ok")
-                    
-                    alert2.tag = 2
-                    
-                    alert2.show()
-                    
-                    submitScore()
-                    
-                }
-                else
-                {
-                    continues -= 1
-                    
-                    UserDefaults.standard.set(continues, forKey: "continues")
-                    
-                    life1.isHidden = false
-                    life2.isHidden = false
-                    life3.isHidden = false
-                    
-                    lives = 3
-                    
-                    level += 1
-                    
-                    startButton.isHidden = false
-                    
-                    updateLevelLabel()
-                    levelLabel.isHidden = false
-                    
-                }
-               
-            }
-        }
-        else if alertView.tag == 2
-        {
-            if buttonIndex == 0
-            {
-                var SVC = storyboard?.instantiateViewController(withIdentifier: "SVC") as! StoreViewController
-                SVC.isPresentedModally = true
-                
-                self.navigationController?.present(SVC, animated: true, completion: nil)
             }
         }
         
+        isGameRunning = false
     }
     
     func submitScore()
     {
-        var id: String = "highScore"
-        
-        var highScore = GKScore(leaderboardIdentifier:id)
+        let id = "highScore"
+        let highScore = GKScore(leaderboardIdentifier:id)
         
         highScore.value = Int64(level)
         
-        GKScore.report([highScore], withCompletionHandler: { (error:NSError!) -> Void in
+        GKScore.report([highScore], withCompletionHandler: { (error: Error!) -> Void in
             
-            if (error != nil)
+            if error != nil
             {
-                println(error.localizedDescription)
+                print(error.localizedDescription)
             }
-        } as! (Error?) -> Void)
-        
+        })
     }
     
     func saveAndQuit()
@@ -471,14 +376,12 @@ class GameViewController: UIViewController, UIAlertViewDelegate, AdColonyAdDeleg
         let defaults = UserDefaults.standard
         
         defaults.set(level, forKey: "level")
-        
         defaults.set(lives, forKey: "lives")
         
         startButton.removeFromSuperview()
         levelLabel.removeFromSuperview()
         
         self.navigationController?.popToRootViewController(animated: true)
-        
     }
     
     func cheatersNeverWin()
@@ -502,37 +405,4 @@ class GameViewController: UIViewController, UIAlertViewDelegate, AdColonyAdDeleg
         self.navigationController?.popToRootViewController(animated: true)
     }
     
-    func freePoints() {
-        
-        if (AdColony.isVirtualCurrencyRewardAvailableForZone("vz14d49337fdb14d4990"))
-        {
-            println("yes")
-            AdColony.playVideoAdForZone("vz14d49337fdb14d4990", withDelegate: nil, withV4VCPrePopup: true, andV4VCPostPopup: true)
-            
-            level += 5
-            
-            updateLevelLabel()
-            
-        }
-        else
-        {
-            println("no")
-            let alert = UIAlertView(title: "Sorry", message: "Ad currently unavailable.", delegate: self, cancelButtonTitle: "Ok")
-            
-            alert.show()
-        }
-        
-    }
-
-    
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }

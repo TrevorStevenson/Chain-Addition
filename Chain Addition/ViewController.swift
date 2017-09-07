@@ -34,122 +34,36 @@ class ViewController: UIViewController, ADBannerViewDelegate, GKGameCenterContro
         
         super.viewWillAppear(animated)
         
-        freePointsButton.isHidden = true
-        
-        isAdAvailable()
-        
-        adTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(ViewController.isAdAvailable), userInfo: nil, repeats: true)
-        
         authenticateLocalPlayer()
-
-        if (UserDefaults.standard.bool(forKey: "showAds") == false)
-        {
-            adBanner.removeFromSuperview()
-        }
     }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        
-        adTimer.invalidate()
-        
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    func bannerViewDidLoadAd(_ banner: ADBannerView!) {
-        
-        UIView.beginAnimations(nil, context: nil)
-    
-        UIView.setAnimationDuration(1.0)
-    
-        banner.alpha = 1.0
-    
-        UIView.commitAnimations()
-  
-        
-    }
-    
-    func bannerView(_ banner: ADBannerView!, didFailToReceiveAdWithError error: Error!) {
-        
-        UIView.beginAnimations(nil, context: nil)
-    
-        UIView.setAnimationDuration(1.0)
-    
-        banner.alpha = 0.0
-    
-        UIView.commitAnimations()
-   
-    }
-    
-    func isAdAvailable()
-    {
-        if (AdColony.isVirtualCurrencyRewardAvailableForZone("vz14d49337fdb14d4990"))
-        {
-            freePointsButton.isHidden = false
-        }
-        else
-        {
-            freePointsButton.isHidden = true
-        }
-    }
-    
     
     func authenticateLocalPlayer()
     {
-        localPlayer.authenticateHandler = {(viewController: UIViewController!, error: NSError?) in
+        let localPlayer = GKLocalPlayer.localPlayer()
+        
+        localPlayer.authenticateHandler = {(viewController: UIViewController?, error: Error?) in
             
-            if (viewController != nil)
-            {
-                self.present(viewController, animated: true, completion: nil)
-            }
+            if let VC = viewController { self.present(VC, animated: true, completion: nil) }
             else
             {
-                if (GKLocalPlayer.localPlayer().isAuthenticated)
-                {
-                    self.gameCenterEnabled = true
-                    
-                    GKLocalPlayer.localPlayer().loadDefaultLeaderboardIdentifier(completionHandler: { (leaderboardIdentifier:String!, error:NSError!) -> Void in
-                        
-                        if (error != nil)
-                        {
-                            println(error.localizedDescription)
-                        }
-                        else
-                        {
-                            self.leaderBoardIdentifier = leaderboardIdentifier
-                        }
-                        
-                        } as! (String?, Error?) -> Void)
-                    
-                }
-                else
-                {
-                    self.gameCenterEnabled = false
-                }
+                guard localPlayer.isAuthenticated else { return }
+                
+                localPlayer.loadDefaultLeaderboardIdentifier(completionHandler:nil)
             }
-            
-        } as! (UIViewController?, Error?) -> Void
-
+        }
     }
     
-    func showLeaderboard(_ identifier: NSString)
+    func showLeaderboard(withIdentifier identifier: String)
     {
         let GKVC = GKGameCenterViewController()
-        
         GKVC.gameCenterDelegate = self
-        
         GKVC.viewState = GKGameCenterViewControllerState.leaderboards
-        
-        GKVC.leaderboardIdentifier = identifier as String
+        GKVC.leaderboardIdentifier = identifier
         
         present(GKVC, animated: true, completion: nil)
-        
     }
     
-    func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController!) {
+    func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
         
         dismiss(animated: true, completion: nil)
         
@@ -157,12 +71,12 @@ class ViewController: UIViewController, ADBannerViewDelegate, GKGameCenterContro
 
     @IBAction func leaderboard(_ sender: AnyObject)
     {
-        showLeaderboard(leaderBoardIdentifier as NSString)
+        showLeaderboard(withIdentifier: leaderBoardIdentifier)
     }
 
     @IBAction func twitter(_ sender: AnyObject)
     {
-        let twitterURL = URL(string: "twitter://user?screen_name=NCUnitedApps")
+        let twitterURL = URL(string: "twitter://user?screen_name=TStevensonApps")
         
         if (UIApplication.shared.canOpenURL(twitterURL!))
         {
@@ -170,26 +84,9 @@ class ViewController: UIViewController, ADBannerViewDelegate, GKGameCenterContro
         }
         else
         {
-            UIApplication.shared.openURL(URL(fileURLWithPath: "www.twitter.com/NCUnitedApps"))
+            UIApplication.shared.openURL(URL(fileURLWithPath: "www.twitter.com/TStevensonApps"))
         }
     }
    
-    @IBAction func freePoints(_ sender: AnyObject) {
-        
-        if (AdColony.isVirtualCurrencyRewardAvailableForZone("vz14d49337fdb14d4990"))
-        {
-            println("yes")
-            AdColony.playVideoAdForZone("vz14d49337fdb14d4990", withDelegate: nil, withV4VCPrePopup: true, andV4VCPostPopup: true)
-            
-        }
-        else
-        {
-            println("no")
-            let alert = UIAlertView(title: "Sorry", message: "Ad currently unavailable.", delegate: self, cancelButtonTitle: "Ok")
-            
-            alert.show()
-        }
-
-    }
 }
 
